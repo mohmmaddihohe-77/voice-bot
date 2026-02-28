@@ -15,15 +15,15 @@ client.once('ready', async () => {
   const guild = await client.guilds.fetch(GUILD_ID);
   const channel = await guild.channels.fetch(CHANNEL_ID);
 
- joinVoiceChannel({
+ const connection = joinVoiceChannel({
   channelId: channel.id,
   guildId: guild.id,
   adapterCreator: channel.guild.voiceAdapterCreator,
   selfDeaf: true,
-  selfMute: true,
-  debug: true,
-  encryptionMode: 'aead_aes256_gcm_rtpsize'
+  selfMute: true
 });
+
+connection.on('error', console.error);
   
   console.log('Joined voice channel.');
 });
