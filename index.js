@@ -1,31 +1,49 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel } = require('@discordjs/voice');
+const { Client, GatewayIntentBits, REST, Routes } = require('discord.js');
+const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
+  intents: [GatewayIntentBits.Guilds]
 });
-
-const TOKEN = process.env.TOKEN;
-const GUILD_ID = process.env.GUILD_ID;
-const CHANNEL_ID = process.env.CHANNEL_ID;
 
 client.once('ready', async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
-  const guild = await client.guilds.fetch(GUILD_ID);
-  const channel = await guild.channels.fetch(CHANNEL_ID);
+  const commands = [
+    { name: 'play', description: 'Join voice channel' },
+    { name: 'leave', description: 'Leave voice channel' }
+  ];
 
- const connection = joinVoiceChannel({
-  channelId: channel.id,
-  guildId: guild.id,
-  adapterCreator: channel.guild.voiceAdapterCreator,
-  selfDeaf: true,
-  selfMute: true
+  const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+
+  await rest.put(
+    Routes.applicationCommands(client.user.id),
+    { body: commands }
+  );
+
+  console.log('Slash commands registered');
 });
 
-connection.on('error', console.error);
-  
-  console.log('Joined voice channel.');
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'play') {
+    joinVoiceChannel({
+      channelId: interaction.channel.id,
+      guildId: interaction.guild.id,
+      adapterCreator: interaction.guild.voiceAdapterCreator,
+      selfDeaf: true,
+      selfMute: true
+    });
+
+    await interaction.reply('Joined voice!');
+  }
+
+  if (interaction.commandName === 'leave') {
+    const connection = getVoiceConnection(interaction.guild.id);
+    connection?.destroy();
+
+    await interaction.reply('Left voice!');
+  }
 });
 
-client.login(TOKEN);
+client.login(process.env.TOKEN);
