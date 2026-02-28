@@ -18,12 +18,13 @@ client.once('ready', async () => {
  joinVoiceChannel({
   channelId: channel.id,
   guildId: guild.id,
-  adapterCreator: guild.voiceAdapterCreator,
+  adapterCreator: channel.guild.voiceAdapterCreator,
   selfDeaf: true,
   selfMute: true,
+  debug: true,
   encryptionMode: 'aead_aes256_gcm_rtpsize'
 });
-
+  
   console.log('Joined voice channel.');
 });
 
